@@ -243,7 +243,7 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
 
 // ── App ────────────────────────────────────────────────────────
 export default function App() {
-  const [notes, setNotes] = useState([]);
+const [notes, setNotes] = useState([]);
 const [search, setSearch] = useState("");
 const [showOverlay, setShowOverlay] = useState(false);
 const [showConfig, setShowConfig] = useState(false);
@@ -266,7 +266,7 @@ const [pocketToken, setPocketToken] = useState(
   () => sessionStorage.getItem("sn_token_pocket") || ""
 );
 
-// token ที่ใช้งานจริงตาม source ปัจจุบัน
+// Actual token in use according to the current source code.
 const token = source === "local" ? localToken : pocketToken;
 
 // ── Persist dark mode ──
