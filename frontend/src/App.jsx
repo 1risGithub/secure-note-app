@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchNotes, createNote, deleteNote } from "./API";
+import { fetchNotes, createNote, deleteNote } from "./api";
 
 // ── Icons ──────────────────────────────────────────────────────
 const IconSpinner = () => (
@@ -244,50 +244,50 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
 // ── App ────────────────────────────────────────────────────────
 export default function App() {
   const [notes, setNotes] = useState([]);
-  const [search, setSearch] = useState("");
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [showConfig, setShowConfig] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
-  const [deletingId, setDeletingId] = useState(null);
-  const [error, setError] = useState("");
-  const [showToken, setShowToken] = useState(false);
+const [search, setSearch] = useState("");
+const [showOverlay, setShowOverlay] = useState(false);
+const [showConfig, setShowConfig] = useState(false);
+const [isFetching, setIsFetching] = useState(false);
+const [deletingId, setDeletingId] = useState(null);
+const [error, setError] = useState("");
+const [showToken, setShowToken] = useState(false);
 
-  // ── Persistent state (localStorage) ──
-  const [isDark, setIsDark] = useState(
-    () => localStorage.getItem("sn_dark") === "true"
-  );
-  const [source, setSource] = useState(
-    () => localStorage.getItem("sn_source") || "local"
-  );
-  const [localToken, setLocalToken] = useState(
-    () => sessionStorage.getItem("sn_token_local") || ""
-  );
-  const [pocketToken, setPocketToken] = useState(
-    () => sessionStorage.getItem("sn_token_pocket") || ""
-  );
+// ── Persistent state (localStorage) ──
+const [isDark, setIsDark] = useState(
+  () => localStorage.getItem("sn_dark") === "true"
+);
+const [source, setSource] = useState(
+  () => localStorage.getItem("sn_source") || "local"
+);
+const [localToken, setLocalToken] = useState(
+  () => sessionStorage.getItem("sn_token_local") || ""
+);
+const [pocketToken, setPocketToken] = useState(
+  () => sessionStorage.getItem("sn_token_pocket") || ""
+);
 
-  // Actual token in use according to the current source code.
-  const token = source === "local" ? localToken : pocketToken;
+// token ที่ใช้งานจริงตาม source ปัจจุบัน
+const token = source === "local" ? localToken : pocketToken;
 
-  // ── Persist dark mode ──
-  useEffect(() => {
-    localStorage.setItem("sn_dark", isDark);
-    document.documentElement.classList.toggle("dark", isDark);
-  }, [isDark]);
+// ── Persist dark mode ──
+useEffect(() => {
+  localStorage.setItem("sn_dark", isDark);
+  document.documentElement.classList.toggle("dark", isDark);
+}, [isDark]);
 
-  // ── Persist source ──
-  useEffect(() => {
-    localStorage.setItem("sn_source", source);
-  }, [source]);
+// ── Persist source ──
+useEffect(() => {
+  localStorage.setItem("sn_source", source);
+}, [source]);
 
-  // ── Persist tokens (sessionStorage = Remember until tab closes/Render shutdown) ──
-  useEffect(() => {
-    sessionStorage.setItem("sn_token_local", localToken);
-  }, [localToken]);
+// ── Persist tokens (sessionStorage = จำจนกว่า tab จะปิด/Render shutdown) ──
+useEffect(() => {
+  sessionStorage.setItem("sn_token_local", localToken);
+}, [localToken]);
 
-  useEffect(() => {
-    sessionStorage.setItem("sn_token_pocket", pocketToken);
-  }, [pocketToken]);
+useEffect(() => {
+  sessionStorage.setItem("sn_token_pocket", pocketToken);
+}, [pocketToken]);
 
   // ── Fetch notes ──
   const loadNotes = useCallback(async () => {
@@ -316,7 +316,7 @@ export default function App() {
   try {
     const newNote = await createNote(token, source, title, content);
     const noteWithColor = { ...newNote, colorIndex };
-    // Save color mapping to localStorage
+    // บันทึก color mapping ลง localStorage
     const colorMap = JSON.parse(localStorage.getItem("sn_colors") || "{}");
     colorMap[newNote.id] = colorIndex;
     localStorage.setItem("sn_colors", JSON.stringify(colorMap));
