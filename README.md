@@ -1,101 +1,97 @@
 # SecureNote Application
 
-A lightweight, secure full-stack web application for managing text notes. Built with **React + Vite** (Frontend) and **Express.js** (Backend) to demonstrate client-server architecture, secure communication, and dynamic data routing.
+**SecureNote** is a lightweight, secure full-stack web application for managing text notes. It demonstrates modern client-server architecture, secure communication, and dynamic data routing. The frontend is built with **React + Vite**, and the backend uses **Express.js**.
 
-## Features
+---
 
-- **Two-Way Data Routing** — Switch between Local File System and PocketHost API
-- **Secure Authorization** — Token-based auth via `Authorization` header
-- **Data Persistence** — Notes survive server restarts via `notes.json`
-- **Loading States** — Spinner UI during all async operations
-- **Dark Mode** — Toggle between light and dark themes
-- **Optimistic UI** — Instant feedback before server confirms
+## 1. Key Features
 
-## Tech Stack
+- Two-Way Data Routing – Switch between local storage and the PocketHost API
+- Secure Authorization – Token-based authentication via the Authorization header
+- Persistent Storage – Notes are saved to notes.json, surviving server restarts
+- Loading Indicators – Spinner UI during async operations
+- Dark Mode – Toggle between light and dark themes
+- Optimistic UI Updates – Immediate feedback before server confirmation
+
+---
+
+## 2. Technology Stack
 
 | Layer | Technology |
-|---|---|
+|-------|-----------|
 | Frontend | React 18, Vite, Tailwind CSS |
 | Backend | Node.js, Express.js |
-| Persistence | Local JSON file + PocketHost API |
+| Data Persistence | Local JSON file + PocketHost API |
 | Deployment | Vercel (frontend) + Render (backend) |
 
-## Deployment
+---
+
+## 3. Live Deployment
 
 | Service | URL |
-|---|---|
+|---------|-----|
 | Frontend (Vercel) | https://secure-note-app-zero-nine.vercel.app/ |
 | Backend (Render) | https://secure-note-app-6hl8.onrender.com |
 
-## Prerequisites
-
-- [Node.js](https://nodejs.org/) v18 or higher
-- npm
-
 ---
 
-## 1. Backend Setup
+## 4. Setup Guide
+
+### Prerequisites
+- Node.js v18 or higher
+- npm
+
+### Backend Setup
 ```bash
 cd backend
 npm install
-```
 
-Create a `.env` file in the `backend/` directory:
-```
-PORT=3000
-SECRET_TOKEN=your_secret_password_here
-```
-
-> ⚠️ Never commit `.env` to version control!
-
-Start the server:
-```bash
-npm start
-```
-
-The backend will run at `http://localhost:3000`.
-
----
-
-## 2. Frontend Setup
-```bash
-cd frontend
+# Backend Setup
+cd backend
 npm install
-```
 
-Create a `.env` file in the `frontend/` directory:
-```
-VITE_API_URL=http://localhost:3000/api/notes
-```
+# Create a .env file in the backend/ directory
+echo "PORT=3000" >> .env
+echo "SECRET_TOKEN=your_secret_token_here" >> .env
 
-Start the dev server:
-```bash
+# ⚠️ Important: Do not commit .env to version control
+
+# Start the backend server
+npm start
+
+# Backend runs at: http://localhost:3000
+
+# Frontend Setup
+cd ../frontend
+npm install
+
+# Create a .env file in the frontend/ directory
+echo "VITE_API_URL=http://localhost:3000/api/notes" >> .env
+
+# Start the development server
 npm run dev
-```
 
-Open your browser at `http://localhost:5173`.
+# Access the app in your browser at: http://localhost:5173
 
----
+# 5. API Endpoints & Usage
 
-## API Endpoints
+# API Endpoints
+# Method   Endpoint          Auth    Description
+# GET      /api/notes        No      Retrieve all notes
+# POST     /api/notes        Yes     Create a new note
+# DELETE   /api/notes/:id    Yes     Delete a note by ID
 
-| Method | Endpoint | Auth Required | Description |
-|---|---|---|---|
-| `GET` | `/api/notes` | No | Get all notes |
-| `POST` | `/api/notes` | Yes | Create a new note |
-| `DELETE` | `/api/notes/:id` | Yes | Delete a note |
+# Required Headers
+# Authorization: <your-secret-token>
+# X-Data-Source: local | pockethost
 
-### Headers
-```
-Authorization: <your-token>
-X-Data-Source: local | pockethost
-```
+# Usage Guide
+# 1. Enter your SECRET_TOKEN in the Configuration panel
+# 2. Toggle between Local and PocketHost modes
+# 3. Enter a note title and content, then click Save Note
+# 4. Hover over a note card to reveal the Delete button
 
----
-
-## Usage
-
-1. Enter your `SECRET_TOKEN` in the **Configuration** section
-2. Switch between **Local** and **PocketHost** mode using the toggle
-3. Fill in title and content then click **Save Note**
-4. Hover over a note card to reveal the delete button
+# Notes:
+# - Ensure your backend server is running before using the frontend
+# - Data persists locally via notes.json or remotely via PocketHost API depending on selected mode
+# - Optimistic UI provides immediate feedback but may revert if the server rejects the request

@@ -1,89 +1,86 @@
 # Conceptual Report: SecureNote Application
 
-## 1. JS Engine vs. Runtime
+## 1. JavaScript Engine vs. Runtime
 
-JavaScript ในโปรเจกต์นี้ถูก execute ใน 2 Environment ที่แตกต่างกัน:
+In this project, JavaScript is executed in two distinct environments:
 
-**Frontend (Client-Side — Browser Runtime):**
-React application ทำงานอยู่ภายใน **Browser Runtime** (เช่น Chrome หรือ Firefox) โดยใช้ **V8 JavaScript Engine** ในการ compile source code ให้เป็น machine code และรันบนเครื่องของผู้ใช้ Browser Runtime มี Web APIs เพิ่มเติมให้ใช้งาน เช่น `fetch()` สำหรับทำ HTTP request และ `document` สำหรับ DOM manipulation ซึ่งสิ่งเหล่านี้ไม่ได้เป็นส่วนหนึ่งของ JavaScript ภาษาโดยตรง แต่เป็นสิ่งที่ Runtime เพิ่มมาให้
+**Frontend (Client-Side — Browser Runtime):**  
+The React application runs within a **Browser Runtime** (e.g., Chrome or Firefox) and uses the **V8 JavaScript Engine** to compile source code into machine code, executing it on the user’s device. The Browser Runtime provides additional Web APIs, such as `fetch()` for HTTP requests and `document` for DOM manipulation. These are not part of the core JavaScript language but are provided by the runtime environment.
 
-**Backend (Server-Side — Node.js Runtime):**
-Express.js server ทำงานอยู่ภายใน **Node.js Runtime** ซึ่งก็ใช้ **V8 Engine** เช่นกัน แต่แตกต่างกันตรงที่ Node.js ไม่มี Web APIs เช่น `window` หรือ `document` แต่มี **System-level APIs** แทน เช่น `fs` module สำหรับอ่าน/เขียนไฟล์, `http` module สำหรับสร้าง server และ `process.env` สำหรับอ่านค่า Environment Variables
+**Backend (Server-Side — Node.js Runtime):**  
+The Express.js server operates within the **Node.js Runtime**, which also uses the **V8 Engine**, but differs from the browser in that it lacks Web APIs such as `window` or `document`. Instead, it provides **system-level APIs**, including the `fs` module for file operations, the `http` module for server creation, and `process.env` for reading environment variables.
 
-**สรุป:** ภาษา JavaScript เป็นตัวเดียวกัน แต่ Environment ที่ execute ต่างกัน — Browser ให้ Web APIs, Node.js ให้ System APIs
+**Summary:**  
+The JavaScript language remains the same, but the runtime environment determines the available APIs — browsers provide Web APIs, while Node.js provides system APIs.
 
 ---
 
-## 2. DOM และกลไกการ Render
+## 2. DOM and Rendering Mechanism
 
-โปรเจกต์นี้ใช้ **React.js** ซึ่งทำงานผ่านแนวคิด **Virtual DOM**:
+This project uses **React.js**, which implements a **Virtual DOM** approach:
 
-เมื่อ state เปลี่ยน (เช่น เพิ่มหรือลบ note) React จะไม่แก้ไข Real DOM ทันที แต่ทำตามขั้นตอนดังนี้:
+When the state changes (e.g., adding or deleting a note), React does not immediately update the real DOM. Instead, it follows these steps:
 
-1. **สร้าง Virtual DOM ใหม่** ใน memory
-2. **Diffing** — เปรียบเทียบ Virtual DOM ใหม่กับอันเก่า หาว่ามีส่วนไหนเปลี่ยนแปลงบ้าง
-3. **Reconciliation** — แก้ไข Real DOM เฉพาะส่วนที่เปลี่ยนแปลงเท่านั้น
+1. **Create a new Virtual DOM** in memory.  
+2. **Diffing** — compare the new Virtual DOM with the previous one to detect changes.  
+3. **Reconciliation** — update only the portions of the real DOM that have changed.
 
-ตัวอย่างในโปรเจกต์นี้: เมื่อสร้าง note สำเร็จ จะ call `setNotes((prev) => [newNote, ...prev])` ทำให้ React re-render เฉพาะส่วน notes grid เท่านั้น ไม่ได้ reload ทั้งหน้า นอกจากนี้ยังทำ **Optimistic UI** คือเพิ่ม note ลงใน state ทันทีโดยไม่ต้องรอ server ทำให้ UX ลื่นไหล
+**Example in this project:**  
+When a new note is successfully created, `setNotes((prev) => [newNote, ...prev])` is called, causing React to re-render only the notes grid, not the entire page. Additionally, the application uses **Optimistic UI**, immediately updating the state without waiting for the server response, resulting in a smoother user experience.
 
 ---
 
 ## 3. HTTP/HTTPS Protocols & Request/Response Cycle
 
-เมื่อกดปุ่ม "Save Note" จะเกิดลำดับการสื่อสารดังนี้:
+When the "Save Note" button is clicked, the communication sequence is as follows:
 
-**1. Request:**
-Browser ส่ง HTTP `POST` request ผ่าน `fetch()` API ไปยัง `POST /api/notes`
+**1. Request:**  
+The browser sends an HTTP `POST` request via the `fetch()` API to `POST /api/notes`.
 
-**2. Headers ที่ส่งไป:**
-```
-Content-Type: application/json
-Authorization: <token>
-X-Data-Source: local | pockethost
-```
+**2. Request Headers:**  
 
-- `Content-Type: application/json` — บอก server ว่า body เป็น JSON
-- `Authorization` — ส่ง token เพื่อยืนยันตัวตน
-- `X-Data-Source` — บอก backend ว่าให้เก็บลง Local FS หรือ proxy ไป PocketHost
+- `Content-Type: application/json` — indicates that the request body is JSON.  
+- `Authorization` — includes the token for authentication.  
+- `X-Data-Source` — instructs the backend whether to store the data in the local file system or forward it to PocketHost.
 
-**3. Response:**
-- `201 Created` — สร้าง note สำเร็จ
-- `401 Unauthorized` — token ผิด → Frontend แสดง error message
-- `400 Bad Request` — ข้อมูลไม่ครบ
+**3. Response:**  
+- `201 Created` — note successfully created.  
+- `401 Unauthorized` — invalid token; frontend displays an error message.  
+- `400 Bad Request` — incomplete or malformed data.
 
-**ทำไม HTTPS ถึงสำคัญใน Production:**
-HTTP ใน local ไม่มีปัญหาเพราะ traffic ไม่ได้ผ่าน network จริง แต่ใน production การใช้ plain HTTP ทำให้ Authorization token ถูกส่งเป็น plaintext ผู้ไม่หวังดีสามารถดักจับได้ง่าย (Man-in-the-Middle attack) HTTPS ใช้ TLS encryption เข้ารหัส traffic ทั้งหมดทำให้ปลอดภัย
+**Why HTTPS is essential in production:**  
+While HTTP is sufficient for local development, plain HTTP in production exposes the authorization token as plaintext, making it vulnerable to interception (Man-in-the-Middle attacks). HTTPS encrypts all traffic using TLS, ensuring secure transmission.
 
 ---
 
-## 4. Environment Variables และ Security
+## 4. Environment Variables and Security
 
-`SECRET_TOKEN` ถูกเก็บไว้ใน `.env` ของ backend และ load ผ่าน `require("dotenv").config()` ซึ่งทำงานใน Node.js Runtime เท่านั้น ไฟล์นี้ถูก exclude จาก git ด้วย `.gitignore`
+The `SECRET_TOKEN` is stored in the backend’s `.env` file and loaded using `require("dotenv").config()`. This file is excluded from version control via `.gitignore` and works only within the Node.js runtime.
 
-**ถ้าเก็บ SECRET_TOKEN ไว้ใน Frontend จะเกิดอะไรขึ้น:**
-Frontend code ทั้งหมดถูก compile และส่งให้ browser ของทุกคนที่เข้าเว็บ ใครก็ตามสามารถเปิด Browser DevTools แล้วหา token ได้ทันที ทำให้ Authorization layer ทั้งหมดพังทลาย ใครก็สามารถสร้าง/ลบ note ได้โดยไม่ต้องรู้รหัสจริง
+**What happens if `SECRET_TOKEN` is stored in the frontend:**  
+Frontend code is compiled and sent to every user’s browser. Anyone can inspect the code via developer tools and retrieve the token, compromising the entire authorization system. This would allow unauthorized creation or deletion of notes without knowing the actual token.
 
 ---
 
 ## 5. Bonus: Dynamic Data Routing & Proxy Middleware
 
-ระบบนี้ implement **Two-Way Data Routing** ผ่าน custom header `X-Data-Source`:
+The system implements **two-way data routing** using a custom header `X-Data-Source`:
 
-**Local Mode (FS Persistence):**
-ข้อมูลถูกเก็บลง `notes.json` ผ่าน Node.js `fs` module ทำให้ notes ยังอยู่แม้ server restart
+**Local Mode (File System Persistence):**  
+Data is stored in `notes.json` using Node.js `fs` module, ensuring notes persist even after server restarts.
 
-**PocketHost Mode:**
-Backend ทำหน้าที่เป็น **Proxy Middleware** รับ request จาก Frontend → inject `Bearer` prefix และ `user_id: 2` → forward ไปยัง PocketHost API ทำให้ Frontend ไม่ต้องรู้ schema ของ PocketHost โดยตรง
+**PocketHost Mode:**  
+The backend acts as a **proxy middleware**, receiving requests from the frontend, injecting the `Bearer` prefix and `user_id: 2`, and forwarding them to the PocketHost API. This allows the frontend to remain unaware of the PocketHost schema.
 
-**Loading State:**
-ทุก async operation มี dedicated loading state (`isFetching`, `isSubmitting`, `deletingId`) ที่แสดง spinner และ disable UI ขณะรอ response
+**Loading State:**  
+All asynchronous operations have dedicated loading states (`isFetching`, `isSubmitting`, `deletingId`) that display a spinner and disable UI interactions while waiting for responses.
 
 ---
 
 ## 6. Cloud Deployment (Bonus)
 
-**Frontend → Vercel:**
-React app deploy บน Vercel โดย connect กับ GitHub repo ตรง ทุกครั้งที่ push ไป `main` Vercel จะ build และ deploy ให้อัตโนมัติ Environment variable `VITE_API_URL` ถูก set ผ่าน Vercel Dashboard Vercel ออก SSL/TLS certificate อัตโนมัติ ทำให้ได้ HTTPS
+**Frontend → Vercel:**  
+The React application is deployed on Vercel and connected to the GitHub repository. Every push to `main` triggers automatic build and deployment. The environment variable `VITE_API_URL` is configured through the Vercel dashboard. Vercel provides SSL/TLS certificates automatically, enabling HTTPS.
 
-**Backend → Render:**
-Express.js server deploy เป็น Web Service บน Render โดย Environment variables (`PORT`, `SECRET_TOKEN`) ถูก inject ผ่าน Render Dashboard ทำให้ secrets ไม่เคยอยู่ใน version control
+**Backend → Render:**  
+The Express.js server is deployed as a web service on Render. Environment variables (`PORT`, `SECRET_TOKEN`) are injected via the Render dashboard, ensuring that secrets never reside in version control.
