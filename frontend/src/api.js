@@ -14,12 +14,11 @@ const POCKETHOST_BASE_URL = "https://app-tracking.pockethost.io/api/collections/
  * @returns {Object} headers
  */
 function buildHeaders(token, source) {
-  const authHeader = source === "pockethost" ? `Bearer ${token}` : token;
-
-  return {
-    "Content-Type": "application/json",
-    Authorization: authHeader,
-  };
+  const headers = { "Content-Type": "application/json" };
+  if (token) {
+    headers.Authorization = source === "pockethost" ? `Bearer ${token}` : token;
+  }
+  return headers;
 }
 
 // ── Fetch notes ───────────────────────
