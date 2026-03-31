@@ -23,8 +23,7 @@ function buildHeaders(token, source) {
 // ── Fetch notes ───────────────────────
 export async function fetchNotes(token, source) {
   const url = source === "local" ? LOCAL_BASE_URL : `${POCKETHOST_BASE_URL}?perPage=500`;
-  
-  // สำหรับ local จะไม่ส่ง Authorization ถ้า token ว่าง
+
   const headers = source === "local" ? { "Content-Type": "application/json" } : buildHeaders(token, source);
 
   const res = await fetch(url, {
@@ -51,7 +50,6 @@ export async function createNote(token, source, title, content) {
 
   const body = JSON.stringify({ title, content });
 
-  // สำหรับ local จะไม่ส่ง Authorization ถ้า token ว่าง
   const headers = source === "local" ? { "Content-Type": "application/json" } : buildHeaders(token, source);
 
   const res = await fetch(url, {
@@ -75,7 +73,6 @@ export async function deleteNote(token, source, id) {
   const baseUrl = source === "local" ? LOCAL_BASE_URL : POCKETHOST_BASE_URL;
   const url = `${baseUrl}/${id}`;
 
-  // สำหรับ local จะไม่ส่ง Authorization ถ้า token ว่าง
   const headers = source === "local" ? { "Content-Type": "application/json" } : buildHeaders(token, source);
 
   const res = await fetch(url, {
