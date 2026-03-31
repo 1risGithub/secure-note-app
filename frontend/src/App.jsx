@@ -470,25 +470,16 @@ useEffect(() => {
                     placeholder={source === "local" ? "SECRET_TOKEN" : "PocketHost token"}
                     className={`${inputClass} pr-10`}
                     
-                    // ป้องกัน copy และ context menu
                     onCopy={(e) => {
                       if (!showToken) e.preventDefault();
                     }}
-                    onCut={(e) => {
-                      if (!showToken) e.preventDefault();
-                    }}
-                    onDragStart={(e) => {
-                      if (!showToken) e.preventDefault();
-                    }}
-                    onContextMenu={(e) => {
-                      if (!showToken) e.preventDefault();
-                    }}
-                    
+
                     style={{
-                      userSelect: showToken ? "auto" : "text", // ยังสามารถพิมพ์ได้
-                      caretColor: showToken ? "auto" : "transparent", // cursor หายเมื่อซ่อน
+                      userSelect: "text",
+                      caretColor: showToken ? "auto" : "transparent",
                     }}
                   />
+
                   {/* Button Eyes */}
                   <button
                     type="button"
