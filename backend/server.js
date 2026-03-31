@@ -15,7 +15,7 @@ const NOTES_FILE = path.join(__dirname, "notes.json");
 
 // PocketHost base URL
 const POCKETHOST_BASE_URL =
-  "https://app-tracking.pockethost.io/api/collections/notes/records";
+  "https://app-tracking.pockethost.io/api/collections/notes/records?perPage=500";
 
 // ── Middleware ──────────────────────────────────────────
 app.use(cors());
