@@ -26,6 +26,7 @@ function buildHeaders(token, source) {
 /**
  * Fetch all notes from the specified source.
  * Local returns array, PocketHost returns { items: [...] }.
+ * Safely handles empty response or non-JSON response.
  * @param {string} token
  * @param {string} source
  * @returns {Array} array of notes
@@ -39,12 +40,13 @@ export async function fetchNotes(token, source) {
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    console.error("Fetch notes error:", err);
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const errText = await res.text().catch(() => "");
+    console.error("Fetch notes error:", errText);
+    throw new Error(errText || `HTTP ${res.status}`);
   }
 
-  const data = await res.json();
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : [];
 
   // Normalize data: PocketHost uses data.items, local returns array directly
   return Array.isArray(data) ? data : data.items ?? [];
@@ -54,11 +56,12 @@ export async function fetchNotes(token, source) {
 /**
  * Create a new note on the specified source.
  * Make sure to match the request body fields with PocketHost collection schema.
+ * Safely handles empty or non-JSON response.
  * @param {string} token
  * @param {string} source
  * @param {string} title
  * @param {string} content
- * @returns {Object} created note
+ * @returns {Object|null} created note or null if response empty
  */
 export async function createNote(token, source, title, content) {
   const url = source === "local" ? LOCAL_BASE_URL : POCKETHOST_BASE_URL;
@@ -72,21 +75,23 @@ export async function createNote(token, source, title, content) {
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    console.error("Create note error:", err);
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const errText = await res.text().catch(() => "");
+    console.error("Create note error:", errText);
+    throw new Error(errText || `HTTP ${res.status}`);
   }
 
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 // ── Delete note ──────────────────────
 /**
  * Delete a note by ID from the specified source.
+ * Safely handles empty response (some APIs return 204 No Content).
  * @param {string} token
  * @param {string} source
  * @param {string} id - Note ID to delete
- * @returns {Object} deletion response
+ * @returns {Object|null} deletion response or null if empty
  */
 export async function deleteNote(token, source, id) {
   const baseUrl = source === "local" ? LOCAL_BASE_URL : POCKETHOST_BASE_URL;
@@ -98,10 +103,11 @@ export async function deleteNote(token, source, id) {
   });
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    console.error("Delete note error:", err);
-    throw new Error(err.error || `HTTP ${res.status}`);
+    const errText = await res.text().catch(() => "");
+    console.error("Delete note error:", errText);
+    throw new Error(errText || `HTTP ${res.status}`);
   }
 
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
