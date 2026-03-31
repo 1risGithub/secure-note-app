@@ -459,44 +459,50 @@ useEffect(() => {
                   ))}
                 </div>
                 {/* Token */}
-                  <div className="relative w-full max-w-sm">
-                    <input
-                      type={showToken ? "text" : "password"}
-                      value={source === "local" ? localToken : pocketToken}
-                      onChange={(e) => {
-                        if (source === "local") {
-                          setLocalToken(e.target.value);
-                        } else {
-                          setPocketToken(e.target.value);
-                        }
-                      }}
-                      placeholder={source === "local" ? "SECRET_TOKEN" : "PocketHost token"}
-                      className={`${inputClass} pr-10`}
-                      onCopy={(e) => {
-                        if (!showToken) e.preventDefault();
-                      }}
-                      onSelect={(e) => {
-                        if (!showToken) e.target.setSelectionRange(0, 0);
-                      }}
-                      style={{
-                        userSelect: showToken ? "auto" : "none",
-                        caretColor: showToken ? "auto" : "transparent",
-                      }}
-                    />
-                    {/* Button Eyes */}
-                    <button
-                      type="button"
-                      onClick={() => setShowToken((prev) => !prev)}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md
-                        transition-colors
-                        ${isDark
-                          ? "text-neutral-500 hover:text-neutral-300"
-                          : "text-neutral-400 hover:text-neutral-600"
-                        }`}
-                    >
-                      {showToken ? <IconEyeOff /> : <IconEye />}
-                    </button>
-                  </div>
+                <div className="relative w-full max-w-sm">
+                  <input
+                    type={showToken ? "text" : "password"}
+                    value={source === "local" ? localToken : pocketToken}
+                    onChange={(e) => {
+                      if (source === "local") setLocalToken(e.target.value);
+                      else setPocketToken(e.target.value);
+                    }}
+                    placeholder={source === "local" ? "SECRET_TOKEN" : "PocketHost token"}
+                    className={`${inputClass} pr-10`}
+                    
+                    // ป้องกัน copy และ context menu
+                    onCopy={(e) => {
+                      if (!showToken) e.preventDefault();
+                    }}
+                    onCut={(e) => {
+                      if (!showToken) e.preventDefault();
+                    }}
+                    onDragStart={(e) => {
+                      if (!showToken) e.preventDefault();
+                    }}
+                    onContextMenu={(e) => {
+                      if (!showToken) e.preventDefault();
+                    }}
+                    
+                    style={{
+                      userSelect: showToken ? "auto" : "text", // ยังสามารถพิมพ์ได้
+                      caretColor: showToken ? "auto" : "transparent", // cursor หายเมื่อซ่อน
+                    }}
+                  />
+                  {/* Button Eyes */}
+                  <button
+                    type="button"
+                    onClick={() => setShowToken((prev) => !prev)}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md
+                      transition-colors
+                      ${isDark
+                        ? "text-neutral-500 hover:text-neutral-300"
+                        : "text-neutral-400 hover:text-neutral-600"
+                      }`}
+                  >
+                    {showToken ? <IconEyeOff /> : <IconEye />}
+                  </button>
+                </div>
                 <p className={`text-xs ${textSecondary}`}>
                   {source === "local" ? "Required for create & delete" : "Required for all operations"}
                 </p>
