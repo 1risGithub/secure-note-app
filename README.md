@@ -20,6 +20,13 @@ A lightweight, secure full-stack web application for managing text notes. Built 
 | Persistence | Local JSON file + PocketHost API |
 | Deployment | Vercel (frontend) + Render (backend) |
 
+## Deployment
+
+| Service | URL |
+|---|---|
+| Frontend (Vercel) | https://your-app.vercel.app |
+| Backend (Render) | https://your-backend.onrender.com |
+
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) v18 or higher
