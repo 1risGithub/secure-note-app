@@ -75,6 +75,28 @@ async function callPocketHost(endpoint, token, method = "GET", body = null) {
   return data;
 }
 
+async function fetchAllNotes(token, collection) {
+  let allNotes = [];
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= totalPages) {
+    const data = await callPocketHost(
+      `/api/collections/${collection}/records?perPage=30&page=${page}`,
+      token
+    );
+
+    const items = data?.items || [];
+    allNotes.push(...items);
+
+    // PocketHost จะมี meta.totalPages
+    totalPages = data?.meta?.totalPages || 1;
+    page++;
+  }
+
+  return allNotes;
+}
+
 // ── GET /api/notes ──────────────────────────────────────
 app.get("/api/notes", authorize, async (req, res) => {
   const source = req.headers["x-data-source"] || "local";
@@ -82,11 +104,8 @@ app.get("/api/notes", authorize, async (req, res) => {
 
   if (source === "pockethost") {
     try {
-      const data = await callPocketHost(
-        `/api/collections/${collection}/records?perPage=500`,
-        req.token
-      );
-      return res.status(200).json(data);
+      const data = await fetchAllNotes(req.token, collection);
+      return res.status(200).json({ items: data, totalItems: data.length });
     } catch (err) {
       return res
         .status(err.status || 500)
