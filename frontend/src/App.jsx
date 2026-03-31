@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchNotes, createNote, deleteNote } from "./api";
+import { fetchNotes, createNote, deleteNote } from "./API";
 
 // ── Icons ──────────────────────────────────────────────────────
 const IconSpinner = () => (
