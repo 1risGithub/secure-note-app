@@ -244,71 +244,79 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
 // ── App ────────────────────────────────────────────────────────
 export default function App() {
   const [notes, setNotes] = useState([]);
-const [search, setSearch] = useState("");
-const [showOverlay, setShowOverlay] = useState(false);
-const [showConfig, setShowConfig] = useState(false);
-const [isFetching, setIsFetching] = useState(false);
-const [deletingId, setDeletingId] = useState(null);
-const [error, setError] = useState("");
-const [showToken, setShowToken] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [error, setError] = useState("");
+  const [showToken, setShowToken] = useState(false);
 
-// ── Persistent state (localStorage) ──
-const [isDark, setIsDark] = useState(
-  () => localStorage.getItem("sn_dark") === "true"
-);
-const [source, setSource] = useState(
-  () => localStorage.getItem("sn_source") || "local"
-);
-const [localToken, setLocalToken] = useState(
-  () => sessionStorage.getItem("sn_token_local") || ""
-);
-const [pocketToken, setPocketToken] = useState(
-  () => sessionStorage.getItem("sn_token_pocket") || ""
-);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-// token ที่ใช้งานจริงตาม source ปัจจุบัน
-const token = source === "local" ? localToken : pocketToken;
+  // ── Persistent state (localStorage) ──
+  const [isDark, setIsDark] = useState(
+    () => localStorage.getItem("sn_dark") === "true"
+  );
+  const [source, setSource] = useState(
+    () => localStorage.getItem("sn_source") || "local"
+  );
+  const [localToken, setLocalToken] = useState(
+    () => sessionStorage.getItem("sn_token_local") || ""
+  );
+  const [pocketToken, setPocketToken] = useState(
+    () => sessionStorage.getItem("sn_token_pocket") || ""
+  );
 
-// ── Persist dark mode ──
-useEffect(() => {
-  localStorage.setItem("sn_dark", isDark);
-  document.documentElement.classList.toggle("dark", isDark);
-}, [isDark]);
+  // token ที่ใช้งานจริงตาม source ปัจจุบัน
+  const token = source === "local" ? localToken : pocketToken;
 
-// ── Persist source ──
-useEffect(() => {
-  localStorage.setItem("sn_source", source);
-}, [source]);
+  // ── Persist dark mode ──
+  useEffect(() => {
+    localStorage.setItem("sn_dark", isDark);
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
 
-// ── Persist tokens (sessionStorage = จำจนกว่า tab จะปิด/Render shutdown) ──
-useEffect(() => {
-  sessionStorage.setItem("sn_token_local", localToken);
-}, [localToken]);
+  // ── Persist source ──
+  useEffect(() => {
+    localStorage.setItem("sn_source", source);
+  }, [source]);
 
-useEffect(() => {
-  sessionStorage.setItem("sn_token_pocket", pocketToken);
-}, [pocketToken]);
+  // ── Persist tokens (sessionStorage = จำจนกว่า tab จะปิด/Render shutdown) ──
+  useEffect(() => {
+    sessionStorage.setItem("sn_token_local", localToken);
+  }, [localToken]);
+
+  useEffect(() => {
+    sessionStorage.setItem("sn_token_pocket", pocketToken);
+  }, [pocketToken]);
 
   // ── Fetch notes ──
   const loadNotes = useCallback(async () => {
     setIsFetching(true);
     setError("");
+
     try {
-      const data = await fetchNotes(token, source);
+      const data = await fetchNotes(token, source, page, 30);
+
       const colorMap = JSON.parse(localStorage.getItem("sn_colors") || "{}");
-      const notesWithColors = data.map((n) => ({
+
+      const notesWithColors = data.items.map((n) => ({
         ...n,
         colorIndex: colorMap[n.id] ?? 0,
       }));
+
       setNotes(notesWithColors);
+      setTotalPages(data.totalPages);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsFetching(false);
     }
-  }, [token, source]);
+  }, [token, source, page]);
 
-  useEffect(() => { loadNotes(); }, [loadNotes]);
+  useEffect(() => { loadNotes(); }, [loadNotes, page]);
 
   // ── Create note (called from overlay) ──
   const handleCreate = useCallback(async (title, content, colorIndex) => {
@@ -550,6 +558,31 @@ useEffect(() => {
                   />
                 </div>
               ))}
+            </div>
+          )}
+
+          /* ── Pagination Buttons ── */
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-3 mt-6">
+              <button
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                disabled={page === 1}
+                className="px-3 py-1 rounded bg-neutral-200 dark:bg-neutral-800 disabled:opacity-40"
+              >
+                Prev
+              </button>
+
+              <span className="text-sm">
+                Page {page} / {totalPages}
+              </span>
+
+              <button
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                disabled={page === totalPages}
+                className="px-3 py-1 rounded bg-neutral-200 dark:bg-neutral-800 disabled:opacity-40"
+              >
+                Next
+              </button>
             </div>
           )}
         </main>
