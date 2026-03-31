@@ -49,26 +49,48 @@ function authorize(req, res, next) {
   next();
 }
 
+// ── Helper for calling PocketHost. ───────────────────
+async function callPocketHost(endpoint, token, method = "GET", body = null) {
+  const options = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  };
+  if (body) options.body = JSON.stringify(body);
+
+  const response = await fetch(`${process.env.BASE_URL}${endpoint}`, options);
+  const text = await response.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+
+  if (!response.ok) {
+    throw { status: response.status, message: data };
+  }
+  return data;
+}
+
 // ── GET /api/notes ──────────────────────────────────────
-app.get("/api/notes", async (req, res) => {
+app.get("/api/notes", authorize, async (req, res) => {
   const source = req.headers["x-data-source"] || "local";
+  const collection = process.env.COLLECTION || "notes";
 
   if (source === "pockethost") {
-    const authHeader = req.headers["authorization"];
-    const rawToken = authHeader?.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : authHeader;
     try {
-      const response = await fetch(POCKETHOST_BASE_URL, {
-        headers: {
-          Authorization: `Bearer ${rawToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await response.json();
-      return res.status(response.status).json(data);
+      const data = await callPocketHost(
+        `/api/collections/${collection}/records?perPage=500`,
+        req.token
+      );
+      return res.status(200).json(data);
     } catch (err) {
-      return res.status(500).json({ error: "Failed to reach PocketHost" });
+      return res
+        .status(err.status || 500)
+        .json({ error: "Failed to fetch PocketHost notes", detail: err.message || err });
     }
   }
 
@@ -86,21 +108,21 @@ app.post("/api/notes", authorize, async (req, res) => {
   const source = req.headers["x-data-source"] || "local";
 
   if (source === "pockethost") {
-    try {
-      const response = await fetch(POCKETHOST_BASE_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${req.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ title, content, user_id: 2 }),
-      });
-      const data = await response.json();
-      return res.status(response.status).json(data);
-    } catch (err) {
-      return res.status(500).json({ error: "Failed to reach PocketHost" });
-    }
+  try {
+    const collection = process.env.COLLECTION || "notes";
+    const data = await callPocketHost(
+      `/api/collections/${collection}/records`,
+      req.token,
+      "POST",
+      { title, content }
+    );
+    return res.status(201).json(data);
+  } catch (err) {
+    return res
+      .status(err.status || 500)
+      .json({ error: "Failed to create PocketHost note", detail: err.message || err });
   }
+}
 
   if (!req.isLocal) {
     return res.status(401).json({ error: "Unauthorized: Invalid token" });
@@ -126,17 +148,17 @@ app.delete("/api/notes/:id", authorize, async (req, res) => {
 
   if (source === "pockethost") {
     try {
-      const response = await fetch(`${POCKETHOST_BASE_URL}/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${req.token}` },
-      });
-      if (response.status === 204) {
-        return res.status(200).json({ message: "Note deleted" });
-      }
-      const data = await response.json().catch(() => ({}));
-      return res.status(response.status).json(data);
+      const collection = process.env.COLLECTION || "notes";
+      await callPocketHost(
+        `/api/collections/${collection}/records/${id}`,
+        req.token,
+        "DELETE"
+      );
+      return res.status(200).json({ message: "Note deleted successfully" });
     } catch (err) {
-      return res.status(500).json({ error: "Failed to reach PocketHost" });
+      return res
+        .status(err.status || 500)
+        .json({ error: "Failed to delete PocketHost note", detail: err.message || err });
     }
   }
 
