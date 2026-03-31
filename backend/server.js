@@ -4,7 +4,7 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const fetch = require("node-fetch"); // ถ้า Node 18+ ไม่ต้องติดตั้ง เพิ่มได้
+const fetch = require("node-fetch");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
