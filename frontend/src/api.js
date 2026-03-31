@@ -1,41 +1,35 @@
 // ── URL ───────────────────────────────
-// Local API endpoint (from environment variable or fallback to localhost)
 const LOCAL_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api/notes";
-
-// PocketHost API endpoint for notes collection
 const POCKETHOST_BASE_URL = "https://app-tracking.pockethost.io/api/collections/notes/records";
 
 // ── Headers ───────────────────────────
 /**
  * Build HTTP headers for API requests.
- * PocketHost requires Bearer token, local API might use plain token.
+ * PocketHost requires Bearer token, local might not use token.
  * @param {string} token - Authentication token
  * @param {string} source - "local" or "pockethost"
  * @returns {Object} headers
  */
 function buildHeaders(token, source) {
   const headers = { "Content-Type": "application/json" };
-  if (token) {
-    headers.Authorization = source === "pockethost" ? `Bearer ${token}` : token;
+  if (token && source === "pockethost") {
+    headers.Authorization = `Bearer ${token}`;
+  } else if (token && source === "local") {
+    headers.Authorization = token; // Optional for local if you want
   }
   return headers;
 }
 
 // ── Fetch notes ───────────────────────
-/**
- * Fetch all notes from the specified source.
- * Local returns array, PocketHost returns { items: [...] }.
- * Safely handles empty response or non-JSON response.
- * @param {string} token
- * @param {string} source
- * @returns {Array} array of notes
- */
 export async function fetchNotes(token, source) {
   const url = source === "local" ? LOCAL_BASE_URL : `${POCKETHOST_BASE_URL}?perPage=500`;
+  
+  // สำหรับ local จะไม่ส่ง Authorization ถ้า token ว่าง
+  const headers = source === "local" ? { "Content-Type": "application/json" } : buildHeaders(token, source);
 
   const res = await fetch(url, {
     method: "GET",
-    headers: buildHeaders(token, source),
+    headers,
   });
 
   if (!res.ok) {
@@ -52,24 +46,17 @@ export async function fetchNotes(token, source) {
 }
 
 // ── Create note ──────────────────────
-/**
- * Create a new note on the specified source.
- * Make sure to match the request body fields with PocketHost collection schema.
- * Safely handles empty or non-JSON response.
- * @param {string} token
- * @param {string} source
- * @param {string} title
- * @param {string} content
- * @returns {Object|null} created note or null if response empty
- */
 export async function createNote(token, source, title, content) {
   const url = source === "local" ? LOCAL_BASE_URL : POCKETHOST_BASE_URL;
 
   const body = JSON.stringify({ title, content });
 
+  // สำหรับ local จะไม่ส่ง Authorization ถ้า token ว่าง
+  const headers = source === "local" ? { "Content-Type": "application/json" } : buildHeaders(token, source);
+
   const res = await fetch(url, {
     method: "POST",
-    headers: buildHeaders(token, source),
+    headers,
     body,
   });
 
@@ -84,21 +71,16 @@ export async function createNote(token, source, title, content) {
 }
 
 // ── Delete note ──────────────────────
-/**
- * Delete a note by ID from the specified source.
- * Safely handles empty response (some APIs return 204 No Content).
- * @param {string} token
- * @param {string} source
- * @param {string} id - Note ID to delete
- * @returns {Object|null} deletion response or null if empty
- */
 export async function deleteNote(token, source, id) {
   const baseUrl = source === "local" ? LOCAL_BASE_URL : POCKETHOST_BASE_URL;
   const url = `${baseUrl}/${id}`;
 
+  // สำหรับ local จะไม่ส่ง Authorization ถ้า token ว่าง
+  const headers = source === "local" ? { "Content-Type": "application/json" } : buildHeaders(token, source);
+
   const res = await fetch(url, {
     method: "DELETE",
-    headers: buildHeaders(token, source),
+    headers,
   });
 
   if (!res.ok) {

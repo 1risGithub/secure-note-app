@@ -8,7 +8,7 @@ const fetch = require("node-fetch");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const SECRET_TOKEN = process.env.SECRET_TOKEN;
+const SECRET_TOKEN = process.env.SECRET_TOKEN || "local-secret";
 const COLLECTION = process.env.COLLECTION || "notes";
 const BASE_URL = process.env.BASE_URL || `https://app-tracking.pockethost.io/api/collections/${COLLECTION}/records`;
 
@@ -28,18 +28,35 @@ function writeNotes(notes) {
 
 // ── Middleware: Authorization ────────────────
 function authorize(req, res, next) {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) return res.status(401).json({ error: "Missing Authorization header" });
+  const source = req.headers["x-data-source"] || "local";
 
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
-  req.token = token;
-  req.isLocal = token === SECRET_TOKEN;
+  if (source === "pockethost") {
+    const authHeader = req.headers["authorization"];
+    if (!authHeader) return res.status(401).json({ error: "Missing Authorization header" });
+
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+    req.token = token;
+    next();
+    return;
+  }
+
+  const authHeader = req.headers["authorization"];
+  if (authHeader) {
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+    req.token = token;
+    req.isLocal = token === SECRET_TOKEN;
+  } else {
+    req.isLocal = true;
+  }
   next();
 }
 
 // ── Helper: Call PocketHost API ─────────────
 async function callPocketHost(endpoint, token, method = "GET", body = null) {
-  const options = { method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } };
+  const options = {
+    method,
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+  };
   if (body) options.body = JSON.stringify(body);
 
   const response = await fetch(`${BASE_URL}${endpoint}`, options);
@@ -50,13 +67,11 @@ async function callPocketHost(endpoint, token, method = "GET", body = null) {
   return data;
 }
 
-// ── Helper: Fetch all PocketHost notes (perPage=500) ─
+// ── Helper: Fetch all PocketHost notes ───────
 async function fetchAllPocketNotes(token) {
   let allNotes = [];
   let page = 1;
   let totalPages = 1;
-
-  // ตั้ง perPage=500 เพื่อดึงครั้งละมากๆ
   const perPage = 500;
 
   while (page <= totalPages) {
@@ -70,7 +85,9 @@ async function fetchAllPocketNotes(token) {
   return allNotes;
 }
 
-// ── GET /api/notes ───────────────────────────
+// ── Routes ──────────────────────────────────
+
+// GET /api/notes
 app.get("/api/notes", authorize, async (req, res) => {
   const source = req.headers["x-data-source"] || "local";
 
@@ -87,7 +104,7 @@ app.get("/api/notes", authorize, async (req, res) => {
   return res.status(200).json(readNotes());
 });
 
-// ── POST /api/notes ──────────────────────────
+// POST /api/notes
 app.post("/api/notes", authorize, async (req, res) => {
   const { title, content } = req.body;
   if (!title || !content) return res.status(400).json({ error: "title and content are required" });
@@ -113,7 +130,7 @@ app.post("/api/notes", authorize, async (req, res) => {
   return res.status(201).json(newNote);
 });
 
-// ── DELETE /api/notes/:id ─────────────────────
+// DELETE /api/notes/:id
 app.delete("/api/notes/:id", authorize, async (req, res) => {
   const { id } = req.params;
   const source = req.headers["x-data-source"] || "local";
