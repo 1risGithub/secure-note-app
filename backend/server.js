@@ -18,7 +18,14 @@ const POCKETHOST_BASE_URL =
   "https://app-tracking.pockethost.io/api/collections/notes/records";
 
 // ── Middleware ──────────────────────────────────────────
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://secure-note-app-five.vercel.app",
+  ],
+  methods: ["GET", "POST", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Data-Source"],
+}));
 app.use(express.json());
 
 // ── Helpers: Local JSON ─────────────────────────────────
