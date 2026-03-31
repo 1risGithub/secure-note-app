@@ -24,8 +24,8 @@ A lightweight, secure full-stack web application for managing text notes. Built 
 
 | Service | URL |
 |---|---|
-| Frontend (Vercel) | https://your-app.vercel.app |
-| Backend (Render) | https://your-backend.onrender.com |
+| Frontend (Vercel) | https://secure-note-app-zero-nine.vercel.app/ |
+| Backend (Render) | https://secure-note-app-6hl8.onrender.com |
 
 ## Prerequisites
 
