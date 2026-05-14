@@ -710,7 +710,7 @@ const handleUpdate = useCallback(async (id, title, content) => {
 
           {/* Loading skeleton */}
           {isFetching && notes.length === 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {[1,2,3,4,5,6,7,8].map((i) => (
                 <div key={i} className={`aspect-square rounded-2xl border animate-pulse
                   ${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"}`} />
@@ -733,7 +733,7 @@ const handleUpdate = useCallback(async (id, title, content) => {
 
           {/* Notes grid — Responsive */}
           {filteredNotes.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredNotes.map((note) => (
                 <div key={note.id} className="note-card-enter cursor-pointer"
                   onClick={() => { setSelectedNote(note); setShowDetail(true); }}>
