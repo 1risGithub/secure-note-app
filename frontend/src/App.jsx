@@ -575,13 +575,15 @@ const handleUpdate = useCallback(async (id, title, content) => {
 
         {/* ── Top Bar ── */}
         <header className={`sticky top-0 z-40 border-b backdrop-blur-md ${topbarBg}`}>
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-2 sm:gap-3">
 
             {/* Logo */}
-            <span className={`font-bold text-base mr-2 ${textPrimary}`}>SecureNote</span>
+            <span className={`font-bold text-sm sm:text-base flex-shrink-0 ${textPrimary}`}>
+              SecureNote
+            </span>
 
             {/* Search */}
-            <div className={`flex items-center gap-2 flex-1 max-w-xs px-3 py-1.5 rounded-lg border
+            <div className={`flex items-center gap-2 flex-1 min-w-0 px-3 py-1.5 rounded-lg border
               ${isDark ? "bg-neutral-900 border-neutral-800" : "bg-white border-neutral-200"}`}>
               <IconSearch />
               <input
@@ -589,23 +591,23 @@ const handleUpdate = useCallback(async (id, title, content) => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className={`flex-1 text-sm bg-transparent outline-none
+                className={`flex-1 min-w-0 text-sm bg-transparent outline-none
                   ${isDark ? "text-neutral-100 placeholder-neutral-600" : "text-neutral-900 placeholder-neutral-400"}`}
               />
               {search && (
-                <button onClick={() => setSearch("")} className={`text-xs ${textSecondary} hover:text-red-400`}>✕</button>
+                <button onClick={() => setSearch("")} className={`text-xs flex-shrink-0 ${textSecondary} hover:text-red-400`}>✕</button>
               )}
             </div>
 
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {/* Note count */}
               <span className={`text-xs font-mono hidden sm:block ${textSecondary}`}>
                 {filteredNotes.length} notes
               </span>
 
-              {/* Refresh */}
+              {/* Refresh — ซ่อนบนมือถือ */}
               <button onClick={loadNotes} disabled={isFetching}
-                className={`p-2 rounded-lg transition-colors
+                className={`hidden sm:flex p-2 rounded-lg transition-colors
                   ${isDark ? "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800"
                     : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100"
                   } disabled:opacity-40`}>
