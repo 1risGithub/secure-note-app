@@ -90,7 +90,7 @@ function NoteCard({ note, onDelete, isDark, isDeleting }) {
             {note.title}
           </h3>
           <button
-            onClick={() => onDelete(note.id)}
+            onClick={(e) => { e.stopPropagation(); onDelete(note.id); }}
             disabled={isDeleting}
             className={`flex-shrink-0 p-1.5 rounded-lg opacity-0 group-hover:opacity-100
               transition-all duration-150
@@ -524,18 +524,19 @@ useEffect(() => {
     }
   }
 
-  const handleUpdate = useCallback(async (id, title, content) => {
-    if (!token.trim()) return false;
-    try {
-      const updated = await updateNote(token, source, id, title, content);
-      setNotes((prev) => prev.map((n) =>
-        n.id === id ? { ...updated, colorIndex: n.colorIndex } : n
-      ));
-      return true;
-    } catch {
-      return false;
-    }
-  }, [token, source]);
+const handleUpdate = useCallback(async (id, title, content) => {
+  if (!token.trim()) return false;
+  try {
+    const updated = await updateNote(token, source, id, title, content);
+    const colorIndex = notes.find((n) => n.id === id)?.colorIndex ?? 0;
+    const updatedWithColor = { ...updated, colorIndex };
+    setNotes((prev) => prev.map((n) => n.id === id ? updatedWithColor : n));
+    setSelectedNote(updatedWithColor); // ← อัปเดต popup ทันที
+    return true;
+  } catch {
+    return false;
+  }
+}, [token, source, notes]);
 
   const filteredNotes = notes.filter((n) =>
     n.title.toLowerCase().includes(search.toLowerCase()) ||
