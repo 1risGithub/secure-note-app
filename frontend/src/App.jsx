@@ -476,6 +476,7 @@ useEffect(() => {
   // ── Fetch notes ──
   const loadNotes = useCallback(async () => {
     setIsFetching(true);
+    setNotes([]);
     setError("");
     try {
       const data = await fetchNotes(token, source);
@@ -500,7 +501,6 @@ useEffect(() => {
   try {
     const newNote = await createNote(token, source, title, content);
     const noteWithColor = { ...newNote, colorIndex };
-    // บันทึก color mapping ลง localStorage
     const colorMap = JSON.parse(localStorage.getItem("sn_colors") || "{}");
     colorMap[newNote.id] = colorIndex;
     localStorage.setItem("sn_colors", JSON.stringify(colorMap));
@@ -646,7 +646,7 @@ useEffect(() => {
                 {/* Source toggle */}
                 <div className={`flex rounded-lg p-0.5 ${isDark ? "bg-neutral-800" : "bg-neutral-100"}`}>
                   {["local", "pockethost"].map((s) => (
-                    <button key={s} onClick={() => setSource(s)}
+                    <button key={s} onClick={() => { setSource(s); setNotes([]); }}
                       className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150
                         ${source === s
                           ? isDark ? "bg-neutral-700 text-neutral-100" : "bg-white text-neutral-900 shadow-sm"
