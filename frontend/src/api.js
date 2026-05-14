@@ -89,3 +89,29 @@ export async function deleteNote(token, source, id) {
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
+
+// ── Update note ──────────────────────
+export async function updateNote(token, source, id, title, content) {
+  const baseUrl = source === "local" ? LOCAL_BASE_URL : POCKETHOST_BASE_URL;
+  const url = `${baseUrl}/${id}`;
+
+  const headers = buildHeaders(token, source);
+  if (source === "local") {
+    headers["X-Data-Source"] = "local";
+    if (token) headers.Authorization = token;
+  }
+
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify({ title, content }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(errText || `HTTP ${res.status}`);
+  }
+
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}

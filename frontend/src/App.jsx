@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchNotes, createNote, deleteNote } from "./api";
+import { fetchNotes, createNote, deleteNote, updateNote } from "./api";
 
 // ── Icons ──────────────────────────────────────────────────────
 const IconSpinner = () => (
@@ -241,6 +241,186 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
   );
 }
 
+// ── Note Detail / Edit Overlay ─────────────────────────────────
+function NoteDetailOverlay({ note, show, onClose, onDelete, onSave, isDark, isDeleting }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
+      setIsEditing(false);
+      setError("");
+    }
+  }, [note]);
+
+  useEffect(() => {
+    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  async function handleSave() {
+    if (!title.trim() || !content.trim()) {
+      setError("Please fill in both title and content.");
+      return;
+    }
+    setIsSaving(true);
+    setError("");
+    const success = await onSave(note.id, title.trim(), content.trim());
+    setIsSaving(false);
+    if (success) setIsEditing(false);
+    else setError("Failed to save. Check your token.");
+  }
+
+  function handleDiscard() {
+    setTitle(note.title);
+    setContent(note.content);
+    setIsEditing(false);
+    setError("");
+  }
+
+  if (!note) return null;
+
+  const overlayBg = isDark ? "bg-neutral-900" : "bg-white";
+  const textPrimary = isDark ? "text-neutral-100" : "text-neutral-900";
+  const textSecondary = isDark ? "text-neutral-500" : "text-neutral-400";
+  const divider = isDark ? "border-neutral-800" : "border-neutral-100";
+
+  const dateStr = note.created
+    ? new Date(note.created).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })
+    : "";
+  const timeStr = note.created
+    ? new Date(note.created).toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" })
+    : "";
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className={`fixed inset-0 z-50 transition-all duration-300
+          ${show ? "bg-black/50 backdrop-blur-sm pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      />
+
+      {/* Panel */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 max-w-lg mx-auto
+          rounded-2xl shadow-2xl flex flex-col overflow-hidden
+          transition-all duration-300 ease-out
+          ${overlayBg}
+          ${show ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}
+        style={{ maxHeight: "80vh" }}
+      >
+        {/* Header */}
+        <div className={`flex items-center justify-between px-5 py-4 border-b ${divider}`}>
+          <button
+            onClick={onClose}
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium
+              transition-colors
+              ${isDark ? "bg-neutral-800 text-neutral-400 hover:bg-neutral-700" : "bg-neutral-100 text-neutral-500 hover:bg-neutral-200"}`}
+          >
+            ✕
+          </button>
+
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <button onClick={handleDiscard}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+                    ${isDark ? "text-neutral-400 hover:bg-neutral-800" : "text-neutral-500 hover:bg-neutral-100"}`}>
+                  Discard
+                </button>
+                <button onClick={handleSave} disabled={isSaving}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+                    flex items-center gap-1.5 disabled:opacity-40
+                    ${isDark ? "bg-neutral-100 text-neutral-900 hover:bg-white" : "bg-neutral-900 text-white hover:bg-neutral-700"}`}>
+                  {isSaving ? <><IconSpinner /> Saving...</> : "Save"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => setIsEditing(true)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+                    ${isDark ? "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+                      : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"}`}>
+                  Edit
+                </button>
+                <button
+                  onClick={() => { onDelete(note.id); onClose(); }}
+                  disabled={isDeleting}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors
+                    text-red-400 hover:bg-red-500/10 disabled:opacity-40">
+                  {isDeleting ? <IconSpinner /> : "Delete"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mx-5 mt-4 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            ⚠ {error}
+          </div>
+        )}
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto px-5 py-5">
+          {isEditing ? (
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={`w-full text-xl font-bold mb-3 bg-transparent outline-none ${textPrimary} placeholder-neutral-400`}
+              placeholder="Title"
+              autoFocus
+            />
+          ) : (
+            <h2 className={`text-xl font-bold mb-3 ${textPrimary}`}>{note.title}</h2>
+          )}
+
+          <div className={`h-px w-full mb-4 ${isDark ? "bg-neutral-800" : "bg-neutral-100"}`} />
+
+          {isEditing ? (
+            <div>
+              <textarea
+                value={content}
+                onChange={(e) => { if (e.target.value.length <= MAX_CHARS) setContent(e.target.value); }}
+                className={`w-full text-sm leading-relaxed bg-transparent outline-none resize-none ${textPrimary} placeholder-neutral-400`}
+                placeholder="Start writing..."
+                rows={8}
+              />
+              <div className="flex justify-end mt-1">
+                <span className={`text-xs font-mono ${content.length >= MAX_CHARS ? "text-red-400" : textSecondary}`}>
+                  {content.length}/{MAX_CHARS}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className={`text-sm leading-relaxed whitespace-pre-wrap ${textSecondary}`}>
+              {note.content}
+            </p>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!isEditing && dateStr && (
+          <div className={`px-5 py-3 border-t ${divider}`}>
+            <p className={`text-xs font-mono ${textSecondary}`}>
+              {dateStr}{timeStr && ` · ${timeStr}`}
+            </p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── App ────────────────────────────────────────────────────────
 export default function App() {
 const [notes, setNotes] = useState([]);
@@ -251,6 +431,8 @@ const [isFetching, setIsFetching] = useState(false);
 const [deletingId, setDeletingId] = useState(null);
 const [error, setError] = useState("");
 const [showToken, setShowToken] = useState(false);
+const [selectedNote, setSelectedNote] = useState(null);
+const [showDetail, setShowDetail] = useState(false);
 
 // ── Persistent state (localStorage) ──
 const [isDark, setIsDark] = useState(
@@ -340,6 +522,19 @@ useEffect(() => {
       setDeletingId(null);
     }
   }
+
+  const handleUpdate = useCallback(async (id, title, content) => {
+    if (!token.trim()) return false;
+    try {
+      const updated = await updateNote(token, source, id, title, content);
+      setNotes((prev) => prev.map((n) =>
+        n.id === id ? { ...updated, colorIndex: n.colorIndex } : n
+      ));
+      return true;
+    } catch {
+      return false;
+    }
+  }, [token, source]);
 
   const filteredNotes = notes.filter((n) =>
     n.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -538,7 +733,8 @@ useEffect(() => {
           {filteredNotes.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {filteredNotes.map((note) => (
-                <div key={note.id} className="note-card-enter">
+                <div key={note.id} className="note-card-enter cursor-pointer"
+                  onClick={() => { setSelectedNote(note); setShowDetail(true); }}>
                   <NoteCard
                     note={note}
                     onDelete={handleDelete}
@@ -578,6 +774,15 @@ useEffect(() => {
         onClose={() => setShowOverlay(false)}
         onSave={handleCreate}
         isDark={isDark}
+      />
+      <NoteDetailOverlay
+        note={selectedNote}
+        show={showDetail}
+        onClose={() => setShowDetail(false)}
+        onDelete={handleDelete}
+        onSave={handleUpdate}
+        isDark={isDark}
+        isDeleting={deletingId === selectedNote?.id}
       />
     </>
   );

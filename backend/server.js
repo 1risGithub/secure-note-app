@@ -144,6 +144,34 @@ app.delete("/api/notes/:id", authorize, async (req, res) => {
     }
   }
 
+// PATCH /api/notes/:id
+app.patch("/api/notes/:id", authorize, async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+  const source = req.headers["x-data-source"] || "local";
+
+  if (!title || !content) return res.status(400).json({ error: "title and content are required" });
+
+  if (source === "pockethost") {
+    try {
+      const data = await callPocketHost(`/${id}`, req.token, "PATCH", { title, content });
+      return res.status(200).json(data);
+    } catch (err) {
+      return res.status(err.status || 500).json({ error: "Failed to update PocketHost note", detail: err.message || err });
+    }
+  }
+
+  if (!req.isLocal) return res.status(401).json({ error: "Invalid token" });
+
+  const notes = readNotes();
+  const index = notes.findIndex(n => n.id === id);
+  if (index === -1) return res.status(404).json({ error: "Note not found" });
+
+  notes[index] = { ...notes[index], title, content, updated: new Date().toISOString() };
+  writeNotes(notes);
+  return res.status(200).json(notes[index]);
+});
+
   // Local notes
   if (!req.isLocal) return res.status(401).json({ error: "Invalid token" });
 
