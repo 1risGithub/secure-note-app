@@ -185,7 +185,6 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
         </button>
       </div>
 
-      {/* Error — แสดงใต้ top bar ทันที */}
       {error && (
         <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
           ⚠ {error}
