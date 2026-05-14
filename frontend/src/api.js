@@ -92,14 +92,13 @@ export async function deleteNote(token, source, id) {
 
 // ── Update note ──────────────────────
 export async function updateNote(token, source, id, title, content) {
-  const baseUrl = source === "local" ? LOCAL_BASE_URL : POCKETHOST_BASE_URL;
-  const url = `${baseUrl}/${id}`;
+  const url = `${LOCAL_BASE_URL}/${id}`;
 
-  const headers = buildHeaders(token, source);
-  if (source === "local") {
-    headers["X-Data-Source"] = "local";
-    if (token) headers.Authorization = token;
-  }
+  const headers = {
+    "Content-Type": "application/json",
+    "X-Data-Source": source,
+  };
+  if (token) headers.Authorization = source === "pockethost" ? `Bearer ${token}` : token;
 
   const res = await fetch(url, {
     method: "PATCH",

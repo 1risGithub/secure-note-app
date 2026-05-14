@@ -183,17 +183,5 @@ app.patch("/api/notes/:id", authorize, async (req, res) => {
   return res.status(200).json(notes[index]);
 });
 
-  // Local notes
-  if (!req.isLocal) return res.status(401).json({ error: "Invalid token" });
-
-  const notes = readNotes();
-  const index = notes.findIndex(n => n.id === id);
-  if (index === -1) return res.status(404).json({ error: "Note not found" });
-
-  notes.splice(index, 1);
-  writeNotes(notes);
-  return res.status(200).json({ message: "Local note deleted" });
-});
-
 // ── Start Server ────────────────────────────
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
