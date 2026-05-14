@@ -164,7 +164,7 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
       ${show ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6 pointer-events-none"}`}>
 
       {/* Top bar */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4">
         <button
           onClick={onClose}
           className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-medium
@@ -184,6 +184,13 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
           {isSubmitting ? <IconSpinner /> : "✓"}
         </button>
       </div>
+
+      {/* Error — แสดงใต้ top bar ทันที */}
+      {error && (
+        <div className="mb-4 px-4 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          ⚠ {error}
+        </div>
+      )}
 
       {/* Title */}
       <input
@@ -232,11 +239,6 @@ function CreateOverlay({ show, onClose, onSave, isDark }) {
         </span>
       </div>
 
-      {error && (
-        <div className="mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs">
-          ⚠ {error}
-        </div>
-      )}
     </div>
   );
 }
